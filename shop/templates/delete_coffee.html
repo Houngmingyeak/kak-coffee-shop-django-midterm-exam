@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ coffee.name }} — Coffee Shop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="page-header mb-4" style="background: linear-gradient(135deg, #7b1a1a 0%, #c0392b 100%);">
+            <h2 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Coffee</h2>
+            <p class="mb-0 opacity-75 mt-1">This action cannot be undone.</p>
+        </div>
+
+        <div class="form-card text-center">
+
+            {% with img=coffee.get_image %}
+            {% if img %}
+            <div class="mb-4" style="border-radius:12px;overflow:hidden;height:180px;">
+                <img src="{{ img }}" alt="{{ coffee.name }}"
+                     style="width:100%;height:100%;object-fit:cover;"
+                     onerror="this.parentElement.style.display='none'">
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
+            <h4 class="mb-1">Are you sure?</h4>
+            <p class="text-muted mb-4">You are about to permanently delete this item.</p>
+
+            <div class="bg-light rounded p-3 mb-4 text-start">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <th class="text-muted" width="35%">Name</th>
+                        <td class="fw-semibold">{{ coffee.name }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Category</th>
+                        <td>{{ coffee.get_category_display }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Price</th>
+                        <td class="fw-bold" style="color:var(--coffee-accent)">${{ coffee.price }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Status</th>
+                        <td>
+                            {% if coffee.is_available %}
+                                <span class="badge bg-success">Available</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Unavailable</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex gap-3 justify-content-center">
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-trash me-1"></i>Yes, Delete
+                    </button>
+                    <a href="{% url 'coffee_list' %}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-arrow-left me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

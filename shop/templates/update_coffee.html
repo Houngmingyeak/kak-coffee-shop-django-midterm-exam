@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Update {{ coffee.name }} — Coffee Shop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="page-header mb-4">
+            <h2 class="mb-0"><i class="fas fa-edit me-2"></i>Update Coffee</h2>
+            <p class="mb-0 opacity-75 mt-1">Editing: <strong>{{ coffee.name }}</strong></p>
+        </div>
+
+        <div class="form-card">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Coffee Name <span class="text-danger">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Category</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}<div class="text-danger small mt-1">{{ form.category.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Price ($) <span class="text-danger">*</span></label>
+                    {{ form.price }}
+                    {% if form.price.errors %}<div class="text-danger small mt-1">{{ form.price.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Coffee Photo</label>
+
+                    {% with img=coffee.get_image %}
+                    {% if img %}
+                    <div class="current-photo-wrap mb-3">
+                        <img src="{{ img }}" id="currentPhoto" alt="Current photo"
+                             onerror="this.parentElement.style.display='none'">
+                        <div class="current-photo-label">
+                            <i class="fas fa-image me-1"></i>Current photo
+                            {% if coffee.image %}<span class="badge bg-success ms-2">Uploaded file</span>
+                            {% else %}<span class="badge bg-secondary ms-2">URL</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('id_image').click()">
+                        <div id="uploadPrompt">
+                            <i class="fas fa-cloud-upload-alt fa-2x mb-2" style="color:var(--coffee-light)"></i>
+                            <div class="fw-semibold" style="color:var(--coffee-medium)">
+                                {{ coffee.get_image|yesno:"Replace photo,Upload a photo" }}
+                            </div>
+                            <div class="small text-muted mt-1">Click or drag &amp; drop — JPG, PNG, WEBP</div>
+                        </div>
+                        <img id="imgPreview" src="" alt="New preview" style="display:none;max-height:200px;border-radius:8px;object-fit:cover;">
+                    </div>
+                    <div style="display:none">{{ form.image }}</div>
+                    {% if form.image.errors %}<div class="text-danger small mt-1">{{ form.image.errors }}</div>{% endif %}
+
+                    <div class="mt-3">
+                        <label class="form-label fw-semibold small text-muted">
+                            <i class="fas fa-link me-1"></i>Or use an image URL
+                        </label>
+                        {{ form.image_url }}
+                        <div class="form-text">Uploading a new file overrides the URL.</div>
+                        {% if form.image_url.errors %}<div class="text-danger small mt-1">{{ form.image_url.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4 form-check">
+                    {{ form.is_available }}
+                    <label class="form-check-label fw-semibold ms-2">{{ form.is_available.label }}</label>
+                </div>
+
+                <div class="d-flex gap-3 flex-wrap">
+                    <button type="submit" class="btn btn-coffee px-4">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                    <a href="{% url 'coffee_list' %}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-arrow-left me-1"></i>Cancel
+                    </a>
+                    <a href="{% url 'delete_coffee' coffee.pk %}" class="btn btn-outline-danger ms-auto px-4">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-zone {
+    border: 2px dashed var(--coffee-light);
+    border-radius: 12px;
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: #fdf8f3;
+}
+.upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--coffee-medium);
+    background: #f5ede3;
+}
+.current-photo-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+.current-photo-wrap img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    border-radius: 12px;
+}
+.current-photo-label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 6px;
+}
+</style>
+
+<script>
+const fileInput = document.getElementById('id_image');
+const preview  = document.getElementById('imgPreview');
+const prompt   = document.getElementById('uploadPrompt');
+const zone     = document.getElementById('uploadZone');
+const current  = document.getElementById('currentPhoto');
+
+fileInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        prompt.style.display  = 'none';
+        if (current) current.parentElement.style.opacity = '0.4';
+    };
+    reader.readAsDataURL(file);
+});
+
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', ()  => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    fileInput.dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}
